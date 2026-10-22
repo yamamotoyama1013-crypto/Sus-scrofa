@@ -2,45 +2,73 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sus-scrofa | 固定スケジュール</title>
-  <style>
-    body {
-      margin: 0;
-      background: #f5f2fa;
-      color: #302940;
-      font-family: sans-serif;
-      padding: 24px;
-    }
-    main {
-      max-width: 500px;
-      margin: auto;
-    }
-    h1 { text-align: center; }
-    .next {
-      background: #fff;
-      border-radius: 20px;
-      padding: 30px 15px;
-      text-align: center;
-      box-shadow: 0 4px 20px #ded5e8;
-    }
-    .next h2 { color: #9a70b6; }
-    .date {
-      font-size: 28px;
-      font-weight: bold;
-    }
-    .time {
-      font-size: 23px;
-      margin-top: 12px;
-    }
-    .item {
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      margin: 10px 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sus-scrofa | 固定スケジュール</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #f5f2fa;
+    color: #302940;
+    font-family: sans-serif;
+  }
+  main { max-width: 560px; margin: auto; }
+  h1 { text-align: center; }
+  h2 { margin-top: 32px; }
+  .next {
+    background: white;
+    border-radius: 22px;
+    padding: 30px 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px #ded5e8;
+  }
+  .next h2 { color: #9a70b6; margin: 16px 0; }
+  .date { font-size: 28px; font-weight: bold; }
+  .time { font-size: 23px; margin-top: 12px; }
+  .item {
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .item small { color: #766984; }
+  button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .primary { background: #9570bb; color: white; }
+  .secondary { background: #ebe3f4; color: #49345f; }
+  .danger { background: #fae2e7; color: #a72847; }
+  .panel {
+    margin-top: 28px;
+    padding: 22px;
+    border-radius: 18px;
+    background: white;
+  }
+  label { display: block; margin: 12px 0 5px; }
+  input {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #cbbbdc;
+    border-radius: 9px;
+    font-size: 16px;
+  }
+  .buttons { display: flex; gap: 8px; margin-top: 18px; }
+  .buttons button { flex: 1; }
+  .hidden { display: none; }
+  .center { text-align: center; margin: 26px 0; }
+  .status { color: #766984; font-size: 13px; }
+  .error { color: #bc294b; }
+</style>
 </head>
 <body>
 <main>
@@ -48,92 +76,60 @@
 
   <section class="next">
     <h2>✨ 次の固定は！ ✨</h2>
-    <div class="date" id="nextDate"></div>
+    <div class="date" id="nextDate">読み込み中...</div>
     <div class="time" id="nextTime"></div>
     <p id="countdown"></p>
   </section>
 
   <h2>📅 今後の予定</h2>
   <div id="schedule"></div>
+  <p id="dataStatus" class="status"></p>
+
+  <div class="center">
+    <button class="secondary" id="loginButton">
+      🔐 管理者ログイン
+    </button>
+    <p id="loginStatus" class="status"></p>
+  </div>
+
+  <section id="adminPanel" class="panel hidden">
+    <h2>🐗 予定を管理する</h2>
+    <form id="eventForm">
+      <label for="eventDate">📅 日付</label>
+      <input type="date" id="eventDate" required>
+
+      <label for="eventStart">🕘 開始時刻</label>
+      <input type="time" id="eventStart" value="21:00" required>
+
+      <label for="eventEnd">🕚 終了時刻</label>
+      <input type="time" id="eventEnd" value="23:00" required>
+
+      <div class="buttons">
+        <button type="submit" class="primary" id="saveButton">
+          💾 保存する
+        </button>
+        <button type="button" class="secondary" id="cancelButton">
+          キャンセル
+        </button>
+      </div>
+    </form>
+    <p id="editStatus" class="status"></p>
+  </section>
 </main>
-
-<script>
-  // ★予定はここを書き換えるだけ！
-  // 以下は仮の予定です
-  const schedules = [
-    { start: "2026-10-25T21:00:00+09:00", end: "23:00" },
-    { start: "2026-10-27T22:00:00+09:00", end: "23:30" },
-    { start: "2026-10-29T21:00:00+09:00", end: "23:00" }
-  ];
-
-  const formatter = new Intl.DateTimeFormat("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    month: "long",
-    day: "numeric",
-    weekday: "short"
-  });
-
-  const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23"
-  });
-
-  function update() {
-    const now = new Date();
-    const upcoming = schedules
-      .filter(s => new Date(s.start) > now)
-      .sort((a, b) => new Date(a.start) - new Date(b.start));
-
-    const next = upcoming[0];
-
-    if (next) {
-      const date = new Date(next.start);
-      document.getElementById("nextDate").textContent =
-        formatter.format(date);
-      document.getElementById("nextTime").textContent =
-        timeFormatter.format(date) + " 〜 " + next.end;
-
-      const days = Math.ceil((date - now) / 86400000);
-      document.getElementById("countdown").textContent =
-        "あと " + days + " 日！";
-    } else {
-      document.getElementById("nextDate").textContent =
-        "次回予定は未登録";
-      document.getElementById("nextTime").textContent = "";
-      document.getElementById("countdown").textContent = "";
-    }
-
-    document.getElementById("schedule").innerHTML =
-      upcoming.map(s => {
-        const date = new Date(s.start);
-        return '<div class="item">📌 ' +
-          formatter.format(date) + '　' +
-          timeFormatter.format(date) +
-          ' 〜 ' + s.end + '</div>';
-      }).join("") || '<p>現在、予定はありません。</p>';
-  }
-
-  update();
-  setInterval(update, 60000);
-</script>
-
-<div style="text-align:center; margin:30px;">
-  <button id="loginButton">🔐 管理者ログイン</button>
-  <p id="loginStatus"></p>
-</div>
 
 <script type="module">
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 
 import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged
+  getAuth, GoogleAuthProvider, signInWithPopup,
+  signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+import {
+  getFirestore, collection, onSnapshot,
+  addDoc, updateDoc, deleteDoc, doc
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBVVz1agNt0TOvHVtADM6uEJKRN8U3MnV8",
@@ -142,28 +138,228 @@ const firebaseConfig = {
   appId: "1:462595706378:web:c829d173f3d841daaa19f3"
 };
 
+const ADMIN_UID = "kZbyCD5LW6WZ9rw3m0dFHPjLOKY2";
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const scheduleRef = collection(db, "schedules");
 
-const loginButton = document.getElementById("loginButton");
-const loginStatus = document.getElementById("loginStatus");
+let schedules = [];
+let editingId = null;
+let isAdmin = false;
+let busy = false;
 
-loginButton.addEventListener("click", async () => {
-  try {
-    await signInWithPopup(auth, new GoogleAuthProvider());
-  } catch (error) {
-    loginStatus.textContent =
-      "ログインできませんでした: " + error.code;
-  }
+const $ = id => document.getElementById(id);
+
+const dateFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  month: "long",
+  day: "numeric",
+  weekday: "short"
 });
+
+const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
+  timeZone: "Asia/Tokyo",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23"
+});
+
+function startDate(event) {
+  return new Date(event.start);
+}
+
+function render() {
+  const now = new Date();
+  const upcoming = schedules
+    .filter(e => !isNaN(startDate(e)) && startDate(e) > now)
+    .sort((a, b) => startDate(a) - startDate(b));
+
+  const next = upcoming[0];
+
+  if (next) {
+    const date = startDate(next);
+    $("nextDate").textContent = dateFormatter.format(date);
+    $("nextTime").textContent =
+      timeFormatter.format(date) + " 〜 " + next.end;
+
+    const days = Math.ceil((date - now) / 86400000);
+    $("countdown").textContent =
+      days > 1 ? "あと " + days + " 日！" : "もうすぐ！";
+  } else {
+    $("nextDate").textContent = "次回予定は未登録";
+    $("nextTime").textContent = "";
+    $("countdown").textContent = "";
+  }
+
+  const list = $("schedule");
+  list.replaceChildren();
+
+  if (upcoming.length === 0) {
+    const p = document.createElement("p");
+    p.textContent = "現在、予定はありません。";
+    list.append(p);
+  }
+
+  upcoming.forEach(e => {
+    const row = document.createElement("div");
+    row.className = "item";
+
+    const info = document.createElement("div");
+    const date = document.createElement("strong");
+    date.textContent = "📌 " + dateFormatter.format(startDate(e));
+
+    const time = document.createElement("div");
+    time.textContent =
+      timeFormatter.format(startDate(e)) + " 〜 " + e.end;
+
+    info.append(date, time);
+    row.append(info);
+
+    if (isAdmin) {
+      const actions = document.createElement("div");
+      const edit = document.createElement("button");
+      edit.className = "secondary";
+      edit.textContent = "編集";
+      edit.onclick = () => editEvent(e);
+
+      const remove = document.createElement("button");
+      remove.className = "danger";
+      remove.textContent = "削除";
+      remove.onclick = () => removeEvent(e);
+
+      actions.append(edit, remove);
+      row.append(actions);
+    }
+
+    list.append(row);
+  });
+}
+
+onSnapshot(scheduleRef, snapshot => {
+  schedules = snapshot.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
+  $("dataStatus").textContent = "";
+  render();
+}, error => {
+  $("dataStatus").textContent =
+    "予定を読み込めませんでした: " + error.code;
+  $("dataStatus").classList.add("error");
+  $("nextDate").textContent = "読み込みエラー";
+});
+
+$("loginButton").onclick = async () => {
+  try {
+    if (auth.currentUser) {
+      await signOut(auth);
+    } else {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    }
+  } catch (error) {
+    $("loginStatus").textContent =
+      "認証エラー: " + error.code;
+  }
+};
 
 onAuthStateChanged(auth, user => {
-  if (user) {
-    loginButton.textContent = "ログイン済み";
-    loginStatus.textContent = "ログイン成功！";
-    console.log("管理者UID:", user.uid);
-  }
+  isAdmin = !!user && user.uid === ADMIN_UID;
+
+  $("loginButton").textContent =
+    user ? "ログアウト" : "🔐 管理者ログイン";
+
+  $("loginStatus").textContent =
+    isAdmin ? "👑 管理者としてログイン中" :
+    user ? "閲覧者としてログイン中" : "";
+
+  $("adminPanel").classList.toggle("hidden", !isAdmin);
+  if (!isAdmin) resetForm();
+  render();
 });
+
+function resetForm() {
+  editingId = null;
+  $("eventForm").reset();
+  $("eventStart").value = "21:00";
+  $("eventEnd").value = "23:00";
+  $("saveButton").textContent = "💾 保存する";
+  $("editStatus").textContent = "";
+}
+
+function editEvent(event) {
+  if (!isAdmin || busy) return;
+
+  editingId = event.id;
+  $("eventDate").value = event.start.slice(0, 10);
+  $("eventStart").value = event.start.slice(11, 16);
+  $("eventEnd").value = event.end;
+  $("saveButton").textContent = "💾 変更を保存";
+  $("editStatus").textContent = "予定を編集中";
+  $("adminPanel").scrollIntoView({ behavior: "smooth" });
+}
+
+$("cancelButton").onclick = resetForm;
+
+$("eventForm").onsubmit = async event => {
+  event.preventDefault();
+  if (!isAdmin || busy) return;
+
+  const date = $("eventDate").value;
+  const startTime = $("eventStart").value;
+  const endTime = $("eventEnd").value;
+
+  if (!date || !startTime || !endTime) return;
+
+  const start = date + "T" + startTime + ":00+09:00";
+
+  if (isNaN(new Date(start).getTime())) {
+    $("editStatus").textContent = "日付を確認してね";
+    return;
+  }
+
+  const data = { start, end: endTime };
+  busy = true;
+  $("saveButton").disabled = true;
+  $("editStatus").textContent = "保存中...";
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, "schedules", editingId), data);
+    } else {
+      await addDoc(scheduleRef, data);
+    }
+    resetForm();
+    $("editStatus").textContent = "✅ 保存しました！";
+  } catch (error) {
+    $("editStatus").textContent =
+      "保存エラー: " + error.code;
+  } finally {
+    busy = false;
+    $("saveButton").disabled = false;
+  }
+};
+
+async function removeEvent(event) {
+  if (!isAdmin || busy) return;
+
+  const label = dateFormatter.format(startDate(event));
+  if (!confirm(label + " の予定を削除しますか？")) return;
+
+  busy = true;
+  try {
+    await deleteDoc(doc(db, "schedules", event.id));
+    if (editingId === event.id) resetForm();
+  } catch (error) {
+    alert("削除できませんでした: " + error.code);
+  } finally {
+    busy = false;
+  }
+}
+
+render();
+setInterval(render, 60000);
 </script>
 </body>
 </html>
