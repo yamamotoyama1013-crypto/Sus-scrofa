@@ -4,21 +4,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sus-scrofa Discord Test</title>
+  <title>Sus-scrofa Discord</title>
   <style>
     body {
       background: #f5f2fa;
       color: #302940;
       font-family: sans-serif;
-      text-align: center;
-      padding: 50px 20px;
+      padding: 30px 20px;
+      max-width: 600px;
+      margin: auto;
     }
-    h1 { color: #9570bb; }
+    h1 { color: #9570bb; text-align: center; }
+    .card {
+      background: white;
+      padding: 20px;
+      margin: 12px 0;
+      border-radius: 14px;
+    }
+    #status { text-align: center; }
   </style>
 </head>
 <body>
   <h1>🐗 Sus-scrofa</h1>
-  <h2>Discord支店へようこそ！</h2>
-  <p>🎉 この文字が見えたら表示テスト成功！</p>
+  <h2>📅 固定スケジュール</h2>
+  <p id="status">Firebaseに接続中...</p>
+  <div id="schedule"></div>
+
+  <script>
+    async function loadSchedules() {
+      const status = document.getElementById("status");
+      const list = document.getElementById("schedule");
+
+      const url =
+        "/firestore/v1/projects/sus-scrofa-6713f" +
+        "/databases/(default)/documents/schedules";
+
+      try {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+        const schedules = (data.documents || [])
+          .map(doc => ({
+            start: doc.fields?.start?.stringValue,
+            end: doc.fields?.end?.stringValue,
+            goal: doc.fields?.goal?.stringValue || ""
+          }))
+          .filter(event => event.start)
+          .sort((a, b) => a.start.localeCompare(b.start));
+
+        status.textContent =
+          "✅ Firebase接続成功！ " +
+          schedules.length + "件取得";
+
+        list.replaceChildren();
+
+        schedules.forEach(event => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const date = document.createElement("strong");
+          date.textContent = "📌 " +
+            new Date(event.start).toLocaleString("ja-JP", {
+              timeZone: "Asia/Tokyo",
+              month: "long",
+              day: "numeric",
+              weekday: "short",
+              hour: "2-digit",
+              minute: "2-digit"
+            });
+
+          const time = document.createElement("p");
+          time.textContent = "終了 " + event.end;
+
+          card.append(date, time);
+
+          if (event.goal.trim()) {
+            const goal = document.createElement("p");
+            goal.textContent = "🎯 " + event.goal;
+            card.append(goal);
+          }
+
+          list.append(card);
+        });
+
+      } catch (error) {
+        status.textContent =
+          "❌ 接続エラー: " + error.message;
+      }
+    }
+
+    loadSchedules();
+  </script>
 </body>
 </html>
