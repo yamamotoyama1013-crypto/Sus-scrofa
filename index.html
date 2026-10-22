@@ -191,20 +191,21 @@ function startDate(event) {
   return new Date(event.start);
 }
 
+
 function endDate(event) {
   const start = startDate(event);
-  const end = new Date(start);
+  const day = event.start.slice(0, 10);
+  const end = new Date(
+    day + "T" + event.end + ":00+09:00"
+  );
 
-  const [hours, minutes] = event.end.split(":").map(Number);
-  end.setHours(hours, minutes, 0, 0);
-
-  // 終了時刻が開始時刻以前なら翌日扱い
   if (end <= start) {
-    end.setDate(end.getDate() + 1);
+    end.setTime(end.getTime() + 86400000);
   }
 
   return end;
 }
+
 
 
 function render() {
@@ -222,12 +223,10 @@ const upcoming = schedules
     $("nextTime").textContent =
       timeFormatter.format(date) + " 〜 " + next.end;
 
-const today = new Intl.DateTimeFormat("en-CA", {
-  timeZone: "Asia/Tokyo",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit"
-}).format(now);
+
+const today = new Date(
+  now.getTime() + 9 * 60 * 60 * 1000
+).toISOString().slice(0, 10);
 
 const eventDay = next.start.slice(0, 10);
 
