@@ -222,9 +222,23 @@ const upcoming = schedules
     $("nextTime").textContent =
       timeFormatter.format(date) + " 〜 " + next.end;
 
-    const days = Math.ceil((date - now) / 86400000);
-    $("countdown").textContent =
-      days > 1 ? "あと " + days + " 日！" : "もうすぐ！";
+const today = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit"
+}).format(now);
+
+const eventDay = next.start.slice(0, 10);
+
+const days = Math.round(
+  (Date.parse(eventDay + "T00:00:00Z") -
+   Date.parse(today + "T00:00:00Z")) / 86400000
+);
+
+$("countdown").textContent =
+  days > 0 ? "あと " + days + " 日！" :
+  days === 0 ? "今日だよ！🎉" : "固定中！🔥";
 
 
 const goal = (next.goal || "").trim();
