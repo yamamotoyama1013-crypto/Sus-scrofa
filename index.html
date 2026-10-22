@@ -186,15 +186,33 @@ const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
   hourCycle: "h23"
 });
 
+
 function startDate(event) {
   return new Date(event.start);
 }
 
+function endDate(event) {
+  const start = startDate(event);
+  const end = new Date(start);
+
+  const [hours, minutes] = event.end.split(":").map(Number);
+  end.setHours(hours, minutes, 0, 0);
+
+  // 終了時刻が開始時刻以前なら翌日扱い
+  if (end <= start) {
+    end.setDate(end.getDate() + 1);
+  }
+
+  return end;
+}
+
+
 function render() {
   const now = new Date();
-  const upcoming = schedules
-    .filter(e => !isNaN(startDate(e)) && startDate(e) > now)
-    .sort((a, b) => startDate(a) - startDate(b));
+const upcoming = schedules
+  .filter(e => !isNaN(endDate(e)) && endDate(e) > now)
+  .sort((a, b) => startDate(a) - startDate(b));
+
 
   const next = upcoming[0];
 
@@ -208,8 +226,11 @@ function render() {
     $("countdown").textContent =
       days > 1 ? "あと " + days + " 日！" : "もうすぐ！";
 
-    $("nextGoal").textContent = next.goal || "目標は未設定";
-    $("goalBox").classList.remove("hidden");
+
+const goal = (next.goal || "").trim();
+$("nextGoal").textContent = goal;
+$("goalBox").classList.toggle("hidden", !goal);
+
   } else {
     $("nextDate").textContent = "次回予定は未登録";
     $("nextTime").textContent = "";
