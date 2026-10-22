@@ -118,5 +118,99 @@
   update();
   setInterval(update, 60000);
 </script>
+
+<div style="text-align:center; margin:30px;">
+  <button id="loginButton">🔐 管理者ログイン</button>
+  <p id="loginStatus"></p>
+</div>
+
+<script type="module">
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVVz1agNt0TOvHVtADM6uEJKRN8U3MnV8",
+  authDomain: "sus-scrofa-6713f.firebaseapp.com",
+  projectId: "sus-scrofa-6713f",
+  appId: "1:462595706378:web:c829d173f3d841daaa19f3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const loginButton = document.getElementById("loginButton");
+const loginStatus = document.getElementById("loginStatus");
+
+loginButton.addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (error) {
+    loginStatus.textContent =
+      "ログインできませんでした: " + error.code;
+  }
+});
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loginButton.textContent = "ログイン済み";
+    loginStatus.textContent = "ログイン成功！";
+    console.log("管理者UID:", user.uid);
+  }
+});
+</script>
+  
+<div style="text-align:center; margin:30px;">
+  <button id="loginButton">🔐 管理者ログイン</button>
+  <p id="loginStatus"></p>
+</div>
+
+<script type="module">
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVVz1agNt0TOvHVtADM6uEJKRN8U3MnV8",
+  authDomain: "sus-scrofa-6713f.firebaseapp.com",
+  projectId: "sus-scrofa-6713f",
+  appId: "1:462595706378:web:c829d173f3d841daaa19f3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const loginButton = document.getElementById("loginButton");
+const loginStatus = document.getElementById("loginStatus");
+
+loginButton.addEventListener("click", async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (error) {
+    loginStatus.textContent =
+      "ログインできませんでした: " + error.code;
+  }
+});
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    loginButton.textContent = "ログイン済み";
+    loginStatus.textContent = "ログイン成功！";
+    console.log("管理者UID:", user.uid);
+  }
+});
+</script>
 </body>
 </html>
