@@ -1,0 +1,122 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sus-scrofa | 固定スケジュール</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f5f2fa;
+      color: #302940;
+      font-family: sans-serif;
+      padding: 24px;
+    }
+    main {
+      max-width: 500px;
+      margin: auto;
+    }
+    h1 { text-align: center; }
+    .next {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px 15px;
+      text-align: center;
+      box-shadow: 0 4px 20px #ded5e8;
+    }
+    .next h2 { color: #9a70b6; }
+    .date {
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .time {
+      font-size: 23px;
+      margin-top: 12px;
+    }
+    .item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🐗 Sus-scrofa</h1>
+
+  <section class="next">
+    <h2>✨ 次の固定は！ ✨</h2>
+    <div class="date" id="nextDate"></div>
+    <div class="time" id="nextTime"></div>
+    <p id="countdown"></p>
+  </section>
+
+  <h2>📅 今後の予定</h2>
+  <div id="schedule"></div>
+</main>
+
+<script>
+  // ★予定はここを書き換えるだけ！
+  // 以下は仮の予定です
+  const schedules = [
+    { start: "2026-10-25T21:00:00+09:00", end: "23:00" },
+    { start: "2026-10-27T22:00:00+09:00", end: "23:30" },
+    { start: "2026-10-29T21:00:00+09:00", end: "23:00" }
+  ];
+
+  const formatter = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    month: "long",
+    day: "numeric",
+    weekday: "short"
+  });
+
+  const timeFormatter = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23"
+  });
+
+  function update() {
+    const now = new Date();
+    const upcoming = schedules
+      .filter(s => new Date(s.start) > now)
+      .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    const next = upcoming[0];
+
+    if (next) {
+      const date = new Date(next.start);
+      document.getElementById("nextDate").textContent =
+        formatter.format(date);
+      document.getElementById("nextTime").textContent =
+        timeFormatter.format(date) + " 〜 " + next.end;
+
+      const days = Math.ceil((date - now) / 86400000);
+      document.getElementById("countdown").textContent =
+        "あと " + days + " 日！";
+    } else {
+      document.getElementById("nextDate").textContent =
+        "次回予定は未登録";
+      document.getElementById("nextTime").textContent = "";
+      document.getElementById("countdown").textContent = "";
+    }
+
+    document.getElementById("schedule").innerHTML =
+      upcoming.map(s => {
+        const date = new Date(s.start);
+        return '<div class="item">📌 ' +
+          formatter.format(date) + '　' +
+          timeFormatter.format(date) +
+          ' 〜 ' + s.end + '</div>';
+      }).join("") || '<p>現在、予定はありません。</p>';
+  }
+
+  update();
+  setInterval(update, 60000);
+</script>
+</body>
+</html>
